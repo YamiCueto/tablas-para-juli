@@ -13,6 +13,33 @@ const COLOR = {
   9: '#fd9644'
 };
 
+// ── Splash ──────────────────────────────────────────────────────────────────
+const splash    = document.getElementById('splash');
+const splashBtn = document.getElementById('splash-btn');
+const appEl     = document.getElementById('app');
+
+splashBtn.addEventListener('click', () => {
+  splash.classList.add('hidden');
+  appEl.classList.remove('app-hidden');
+  appEl.classList.add('app-visible');
+  // Staggered table entrance
+  document.querySelectorAll('.table-wrapper').forEach((w, i) => {
+    setTimeout(() => w.classList.add('visible'), 80 + i * 60);
+  });
+});
+
+// ── Mute ────────────────────────────────────────────────────────────────────
+let muted = false;
+const muteBtn  = document.getElementById('mute-btn');
+const muteIcon = document.getElementById('mute-icon');
+
+muteBtn.addEventListener('click', () => {
+  muted = !muted;
+  muteIcon.textContent = muted ? '🔇' : '🔊';
+  muteBtn.classList.toggle('muted', muted);
+  if (muted) synth.cancel();
+});
+
 // ── Build DOM ────────────────────────────────────────────────────────────────
 const container = document.getElementById('tables-container');
 
@@ -27,6 +54,7 @@ TABLES.forEach(t => {
     color: ${COLOR[t]};
     background: ${COLOR[t]}1a;
     border: 1px solid ${COLOR[t]}44;
+    --tc-color: ${COLOR[t]};
   `;
   wrapper.appendChild(title);
 
@@ -82,6 +110,7 @@ synth.addEventListener('voiceschanged', loadVoice);
 let lastSpoken = null;
 
 function speak(t, m, result) {
+  if (muted) return;
   const text = `${t} por ${m} igual a ${result}`;
   if (text === lastSpoken) return;
   lastSpoken = text;
@@ -100,6 +129,7 @@ function clearAll() {
   document.querySelectorAll('tr.mul-row.is-source, tr.mul-row.is-cross').forEach(r => {
     r.classList.remove('is-source', 'is-cross');
   });
+  document.querySelectorAll('.table-title.glowing').forEach(t => t.classList.remove('glowing'));
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
@@ -114,23 +144,30 @@ function onEnter(tr) {
 
   const matched = [];
   document.querySelectorAll('tr.mul-row').forEach(row => {
-    if (+row.dataset.result !== result) return;
     const tbl  = +row.dataset.table;
     const mult = +row.dataset.mult;
 
-    const isSelf  = tbl === sourceTable;
-    const isValid = mult >= 2 && mult <= 9;
+    const isSelf  = tbl === sourceTable && mult === sourceMult;
+    // Conmutativa estricta: solo el intercambio exacto de factores (ej: 8×3 ↔ 3×8)
+    const isSwap  = tbl === sourceMult && mult === sourceTable && tbl !== mult;
 
     if (isSelf) {
       row.classList.add('is-source');
       matched.push({ row, tbl });
-    } else if (isValid) {
+    } else if (isSwap) {
       row.classList.add('is-cross');
       matched.push({ row, tbl });
     }
   });
 
-  if (matched.length > 1) drawLines(matched);
+  if (matched.length > 1) {
+    drawLines(matched);
+    // Glow the column headers of involved tables
+    matched.forEach(({ tbl }) => {
+      const titleEl = container.querySelector(`.table-wrapper:nth-child(${TABLES.indexOf(tbl) + 1}) .table-title`);
+      if (titleEl) titleEl.classList.add('glowing');
+    });
+  }
 }
 
 function drawLines(matched) {

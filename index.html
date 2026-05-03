@@ -3,34 +3,67 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Tablas de Multiplicar 2–9</title>
+  <meta name="theme-color" content="#0b0c18" />
+  <meta name="description" content="Aprende las tablas de multiplicar del 2 al 9 con conexiones cruzadas y voz en español." />
+  <title>Tablas para Juli 🎓</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<canvas id="canvas-overlay"></canvas>
-
-<header>
-  <h1>Tablas de Multiplicar 2 – 9</h1>
-  <p>Pasa el cursor sobre cualquier fila para ver los <strong>resultados cruzados</strong> entre tablas</p>
-</header>
-
-<div class="legend">
-  <div class="legend-item">
-    <span class="legend-dot" style="background:#fff"></span>
-    Fila activa
-  </div>
-  <div class="legend-item">
-    <span class="legend-dot" style="background:#aaa; opacity:.6"></span>
-    Resultado igual en otra tabla
-  </div>
-  <div class="legend-item">
-    <span class="legend-line" style="border-color:#f7971e"></span>
-    Conexión cruzada
+<!-- Splash screen -->
+<div id="splash">
+  <div class="splash-inner">
+    <div class="splash-icon">🎓</div>
+    <h1 class="splash-title">Tablas para Juli</h1>
+    <p class="splash-sub">Aprende las tablas de multiplicar del 2 al 9</p>
+    <button id="splash-btn">¡Empezar! ✨</button>
   </div>
 </div>
 
-<div id="tables-container"></div>
+<!-- App -->
+<div id="app" class="app-hidden">
+
+  <canvas id="canvas-overlay"></canvas>
+
+  <header>
+    <div class="header-inner">
+      <span class="header-icon">🎓</span>
+      <div class="header-text">
+        <h1>Tablas para Juli</h1>
+        <p>Pasa el cursor sobre una fila para ver su <strong>pareja conmutativa</strong></p>
+      </div>
+      <button id="mute-btn" title="Activar / silenciar voz" aria-label="Silenciar voz">
+        <span id="mute-icon">🔊</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item">
+      <span class="legend-dot legend-dot--active"></span>
+      Fila activa
+    </div>
+    <div class="legend-item">
+      <span class="legend-dot legend-dot--cross"></span>
+      Pareja (ej: 3×8 ↔ 8×3)
+    </div>
+    <div class="legend-item">
+      <span class="legend-dash"></span>
+      Conexión visual
+    </div>
+  </div>
+
+  <div id="tables-container"></div>
+
+  <footer>
+    <p>Hecho con <span class="heart">❤️</span> para <strong>Julieta</strong></p>
+  </footer>
+
+</div>
 
 <script src="app.js"></script>
 </body>
