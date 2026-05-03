@@ -9,12 +9,12 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-<!-- Splash screen -->
+<!-- Splash -->
 <div id="splash">
   <div class="splash-inner">
     <div class="splash-icon">🎓</div>
@@ -34,8 +34,9 @@
       <span class="header-icon">🎓</span>
       <div class="header-text">
         <h1>Tablas para Juli</h1>
-        <p>Pasa el cursor sobre una fila para ver su <strong>pareja conmutativa</strong></p>
+        <p>Toca una fila para ver su <strong>pareja conmutativa</strong></p>
       </div>
+      <button id="quiz-btn" title="Iniciar Quiz">🧠</button>
       <button id="mute-btn" title="Activar / silenciar voz" aria-label="Silenciar voz">
         <span id="mute-icon">🔊</span>
       </button>
@@ -49,7 +50,7 @@
     </div>
     <div class="legend-item">
       <span class="legend-dot legend-dot--cross"></span>
-      Pareja (ej: 3×8 ↔ 8×3)
+      Pareja conmutativa
     </div>
     <div class="legend-item">
       <span class="legend-dash"></span>
@@ -59,10 +60,42 @@
 
   <div id="tables-container"></div>
 
+  <!-- Scroll navigation (mobile only) -->
+  <div id="scroll-nav">
+    <button id="nav-prev" aria-label="Tabla anterior">‹</button>
+    <div id="scroll-dots"></div>
+    <button id="nav-next" aria-label="Tabla siguiente">›</button>
+  </div>
+
   <footer>
     <p>Hecho con <span class="heart">❤️</span> para <strong>Julieta</strong></p>
   </footer>
 
+</div>
+
+<!-- Quiz overlay -->
+<div id="quiz-modal" class="quiz-hidden">
+  <div class="quiz-card">
+    <div class="quiz-top">
+      <h2 class="quiz-title">🧠 Quiz</h2>
+      <div class="quiz-score"><span id="q-correct">0</span> / <span id="q-total">0</span></div>
+      <button id="quiz-close" aria-label="Cerrar quiz">✕</button>
+    </div>
+
+    <div id="quiz-progress-bar"><div id="quiz-progress-fill"></div></div>
+
+    <p class="quiz-table-badge" id="q-badge">Tabla del 3</p>
+    <p class="quiz-question" id="q-question">3 × 7 = ?</p>
+
+    <div id="quiz-options" class="quiz-options"></div>
+
+    <div id="quiz-feedback" class="quiz-fb-hidden">
+      <span id="q-fb-icon"></span>
+      <span id="q-fb-text"></span>
+    </div>
+
+    <div id="quiz-stars-row"></div>
+  </div>
 </div>
 
 <script src="app.js"></script>
