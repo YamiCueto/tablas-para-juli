@@ -710,6 +710,54 @@ function initOnboarding() {
   showStep(0);
 }
 
+/* ── PWA: Service Worker + Install prompt ──────────────────── */
+(function initPWA() {
+  /* Register service worker */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('/tablas-para-juli/sw.js')
+        .catch(err => console.warn('SW registration failed:', err));
+    });
+  }
+
+  /* Install prompt */
+  const banner = document.getElementById('install-banner');
+  const btn    = document.getElementById('install-btn');
+  if (!banner || !btn) return;
+
+  let deferredPrompt = null;
+
+  function showBanner() {
+    banner.classList.add('install-visible');
+  }
+
+  function hideBanner() {
+    banner.classList.remove('install-visible');
+  }
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    showBanner();
+  });
+
+  btn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    if (outcome === 'accepted') hideBanner();
+  });
+
+  btn.addEventListener('touchend', e => { e.preventDefault(); btn.click(); }, { passive: false });
+
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    hideBanner();
+  });
+}());
+
 /* ── Voice Recognition ──────────────────────────────────── */
 (function initVoice() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
