@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tablas de Multiplicar 2–9</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<canvas id="canvas-overlay"></canvas>
+
+<header>
+  <h1>Tablas de Multiplicar 2 – 9</h1>
+  <p>Pasa el cursor sobre cualquier fila para ver los <strong>resultados cruzados</strong> entre tablas</p>
+</header>
+
+<div class="legend">
+  <div class="legend-item">
+    <span class="legend-dot" style="background:#fff"></span>
+    Fila activa
+  </div>
+  <div class="legend-item">
+    <span class="legend-dot" style="background:#aaa; opacity:.6"></span>
+    Resultado igual en otra tabla
+  </div>
+  <div class="legend-item">
+    <span class="legend-line" style="border-color:#f7971e"></span>
+    Conexión cruzada
+  </div>
+</div>
+
+<div id="tables-container"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
