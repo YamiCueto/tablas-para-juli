@@ -13,12 +13,19 @@ const COLOR = {
   9: '#fd9644'
 };
 
+// iOS detection (speech needs special handling)
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
 // ── Splash ──────────────────────────────────────────────────────────────────
 const splash    = document.getElementById('splash');
 const splashBtn = document.getElementById('splash-btn');
 const appEl     = document.getElementById('app');
 
 splashBtn.addEventListener('click', () => {
+  // iOS: unlock Web Speech API on the first explicit user gesture
+  unlockSpeech();
+
   splash.classList.add('hidden');
   appEl.classList.remove('app-hidden');
   appEl.classList.add('app-visible');
@@ -102,10 +109,25 @@ let voiceES = null;
 
 function loadVoice() {
   const voices = synth.getVoices();
-  voiceES = voices.find(v => v.lang.startsWith('es')) || voices[0] || null;
+  if (voices.length) {
+    voiceES = voices.find(v => v.lang.startsWith('es')) || voices[0];
+  }
 }
 loadVoice();
 synth.addEventListener('voiceschanged', loadVoice);
+// iOS sometimes needs a short delay before voices are ready
+if (isIOS) setTimeout(loadVoice, 500);
+
+// Unlock audio on iOS — must be called synchronously inside a user gesture
+let speechUnlocked = false;
+function unlockSpeech() {
+  if (speechUnlocked) return;
+  speechUnlocked = true;
+  const u = new SpeechSynthesisUtterance('');
+  u.volume = 0;
+  synth.speak(u);
+  loadVoice();
+}
 
 let lastSpoken = null;
 
@@ -115,13 +137,22 @@ function speak(t, m, result) {
   if (text === lastSpoken) return;
   lastSpoken = text;
 
+  const doSpeak = () => {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang  = 'es-ES';
+    utter.rate  = 0.95;
+    utter.pitch = 1.1;
+    if (voiceES) utter.voice = voiceES;
+    synth.speak(utter);
+  };
+
   synth.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang  = 'es-ES';
-  utter.rate  = 0.95;
-  utter.pitch = 1.1;
-  if (voiceES) utter.voice = voiceES;
-  synth.speak(utter);
+  // iOS ignores speak() called immediately after cancel() — needs a frame gap
+  if (isIOS) {
+    setTimeout(doSpeak, 80);
+  } else {
+    doSpeak();
+  }
 }
 
 // ── Interaction ──────────────────────────────────────────────────────────────
@@ -220,9 +251,9 @@ document.querySelectorAll('tr.mul-row').forEach(tr => {
   // Mouse (desktop)
   tr.addEventListener('mouseenter', () => onEnter(tr));
 
-  // Touch (mobile) — tap toggles: first tap highlights, second tap clears
-  tr.addEventListener('touchstart', e => {
-    e.preventDefault();           // prevent ghost click & scroll-triggered mouseenter
+  // Touch (mobile) — touchend is more reliable on iOS for triggering speech
+  tr.addEventListener('touchend', e => {
+    e.preventDefault();
     if (tr.classList.contains('is-source')) {
       clearAll();
       synth.cancel();
