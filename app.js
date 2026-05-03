@@ -545,10 +545,170 @@ splashBtn.addEventListener('click', () => {
   });
 
   buildScrollDots();
+  setTimeout(initOnboarding, TABLES.length * 80 + 300);
 });
 
 /* ── Init ───────────────────────────────────────────────── */
 buildTables();
+
+/* ── Onboarding ─────────────────────────────────────────── */
+function initOnboarding() {
+  if (localStorage.getItem('juli-onboarding-done')) return;
+
+  const onbEl     = document.getElementById('onboarding');
+  const spotlight = document.getElementById('onb-spotlight');
+  const bubble    = document.getElementById('onb-bubble');
+  const textEl    = document.getElementById('onb-text');
+  const nextBtn   = document.getElementById('onb-next');
+  const skipBtn   = document.getElementById('onb-skip');
+  const dotsEl    = document.getElementById('onb-dots');
+
+  const STEPS = [
+    {
+      selector: '#tables-container',
+      text:     'Aquí están todas las tablas del 2 al 9 🎨',
+      padding:  4,
+      radius:   '12px',
+    },
+    {
+      selector: 'tr.mul-row',
+      text:     'Toca una fila para ver su pareja conmutativa y escucharla 🔊',
+      padding:  3,
+      radius:   '8px',
+    },
+    {
+      selector: '#voice-btn',
+      text:     '¡Pregúntame una tabla con tu voz! Di: "¿Cuánto es 7 por 8?" 🎤',
+      padding:  8,
+      radius:   '50%',
+    },
+    {
+      selector: '#quiz-btn',
+      text:     'Pon a prueba lo que sabes con el Quiz 🏆',
+      padding:  8,
+      radius:   '50px',
+    },
+    {
+      selector: null,
+      text:     '¡Todo listo Julieta! ¿Empezamos? 🚀',
+      final:    true,
+    },
+  ];
+
+  let currentStep = 0;
+
+  /* build dots */
+  STEPS.forEach(() => {
+    const dot = document.createElement('span');
+    dot.className = 'onb-dot';
+    dotsEl.appendChild(dot);
+  });
+
+  function updateDots(idx) {
+    dotsEl.querySelectorAll('.onb-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === idx);
+    });
+  }
+
+  function triggerAnim(isFinal) {
+    bubble.classList.remove('onb-step-enter');
+    if (isFinal) bubble.classList.add('onb-final');
+    else         bubble.classList.remove('onb-final');
+    void bubble.offsetWidth; /* force reflow to restart animation */
+    bubble.classList.add('onb-step-enter');
+  }
+
+  function positionBubble(spotRect) {
+    const GAP  = 14;
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+    const bW   = Math.min(290, winW - 24);
+    const tCX  = spotRect.left + spotRect.width / 2;
+
+    const left      = Math.max(12, Math.min(tCX - bW / 2, winW - bW - 12));
+    const arrowOff  = Math.max(12, Math.min(tCX - left - 11, bW - 34));
+    bubble.style.setProperty('--arrow-offset', arrowOff + 'px');
+
+    const spaceBelow = winH - spotRect.bottom - GAP;
+    const spaceAbove = spotRect.top - GAP;
+    let top, arrowDir;
+
+    if (spaceBelow >= 130 || spaceBelow >= spaceAbove) {
+      top      = spotRect.bottom + GAP;
+      arrowDir = 'up';
+    } else {
+      top      = Math.max(12, spotRect.top - GAP - 130);
+      arrowDir = 'down';
+    }
+
+    bubble.style.top         = top  + 'px';
+    bubble.style.left        = left + 'px';
+    bubble.style.width       = bW   + 'px';
+    bubble.dataset.arrow     = arrowDir;
+  }
+
+  function showStep(idx) {
+    const s = STEPS[idx];
+    textEl.textContent = s.text;
+    updateDots(idx);
+
+    if (s.final) {
+      spotlight.style.opacity = '0';
+      bubble.style.top        = '';
+      bubble.style.left       = '';
+      bubble.style.width      = '';
+      bubble.removeAttribute('data-arrow');
+      triggerAnim(true);
+      nextBtn.textContent   = '¡Vamos! 🚀';
+      skipBtn.style.display = 'none';
+      return;
+    }
+
+    spotlight.style.opacity = '1';
+    nextBtn.textContent     = 'Siguiente →';
+    skipBtn.style.display   = '';
+
+    const el = document.querySelector(s.selector);
+    if (!el) { showStep(idx + 1); return; }
+
+    const rect = el.getBoundingClientRect();
+    const pad  = s.padding ?? 6;
+
+    /* clamp spotlight to viewport */
+    const sTop  = Math.max(0, rect.top    - pad);
+    const sLeft = Math.max(0, rect.left   - pad);
+    const sW    = Math.min(window.innerWidth  - sLeft, rect.width  + pad * 2);
+    const sH    = Math.min(window.innerHeight - sTop,  rect.height + pad * 2);
+
+    spotlight.style.top          = sTop  + 'px';
+    spotlight.style.left         = sLeft + 'px';
+    spotlight.style.width        = sW    + 'px';
+    spotlight.style.height       = sH    + 'px';
+    spotlight.style.borderRadius = s.radius || '8px';
+
+    positionBubble({ top: sTop, left: sLeft, bottom: sTop + sH, width: sW, height: sH });
+    triggerAnim(false);
+  }
+
+  function finish() {
+    localStorage.setItem('juli-onboarding-done', '1');
+    onbEl.classList.add('onboarding-hidden');
+  }
+
+  nextBtn.addEventListener('click', () => {
+    currentStep++;
+    if (currentStep >= STEPS.length) { finish(); return; }
+    showStep(currentStep);
+  });
+
+  skipBtn.addEventListener('click', finish);
+
+  nextBtn.addEventListener('touchend', e => { e.preventDefault(); nextBtn.click(); }, { passive: false });
+  skipBtn.addEventListener('touchend', e => { e.preventDefault(); skipBtn.click(); }, { passive: false });
+
+  onbEl.classList.remove('onboarding-hidden');
+  showStep(0);
+}
 
 /* ── Voice Recognition ──────────────────────────────────── */
 (function initVoice() {
