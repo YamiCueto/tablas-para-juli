@@ -48,6 +48,8 @@ const qCorrectEl     = document.getElementById('q-correct');
 const qTotalEl       = document.getElementById('q-total');
 const quizProgressFill = document.getElementById('quiz-progress-fill');
 const quizStarsRow   = document.getElementById('quiz-stars-row');
+const voiceBtn       = document.getElementById('voice-btn');
+const voiceStatus    = document.getElementById('voice-status');
 
 /* ── State ──────────────────────────────────────────────── */
 let muted         = false;
@@ -547,3 +549,138 @@ splashBtn.addEventListener('click', () => {
 
 /* ── Init ───────────────────────────────────────────────── */
 buildTables();
+
+/* ── Voice Recognition ──────────────────────────────────── */
+(function initVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  /* Hide button on unsupported browsers */
+  if (!SR) {
+    if (voiceBtn) voiceBtn.style.display = 'none';
+    return;
+  }
+
+  /* Spanish number words → integers (1–10 covers all table multipliers) */
+  const WORD_NUM = {
+    'cero': 0, 'un': 1, 'uno': 1, 'una': 1,
+    'dos': 2, 'tres': 3, 'cuatro': 4, 'cinco': 5,
+    'seis': 6, 'siete': 7, 'ocho': 8, 'nueve': 9, 'diez': 10,
+  };
+
+  function normalise(text) {
+    return text
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  /* strip accents */
+      .replace(/[¿?¡!.,;:]/g, '');
+  }
+
+  function toNumber(token) {
+    const n = parseInt(token, 10);
+    if (!isNaN(n)) return n;
+    return Object.prototype.hasOwnProperty.call(WORD_NUM, token) ? WORD_NUM[token] : null;
+  }
+
+  /* Build a regex that matches any digit or Spanish number word */
+  const numTokens = Object.keys(WORD_NUM).concat(['\\d+']).join('|');
+  const MULT_RE   = new RegExp(
+    `(${numTokens})\\s+(?:multiplicado\\s+por|por|x)\\s+(${numTokens})`
+  );
+
+  function parseMultiplication(transcript) {
+    const text  = normalise(transcript);
+    const match = text.match(MULT_RE);
+    if (!match) return null;
+    const a = toNumber(match[1]);
+    const b = toNumber(match[2]);
+    if (a === null || b === null) return null;
+    return { a, b };
+  }
+
+  /* Status badge helpers */
+  let statusTimer = null;
+  function showStatus(msg, persist) {
+    voiceStatus.textContent = msg;
+    voiceStatus.classList.add('visible');
+    clearTimeout(statusTimer);
+    if (!persist) statusTimer = setTimeout(() => voiceStatus.classList.remove('visible'), 2800);
+  }
+  function hideStatus() {
+    clearTimeout(statusTimer);
+    voiceStatus.classList.remove('visible');
+  }
+
+  let recognition = null;
+  let isListening = false;
+
+  function setListening(val) {
+    isListening = val;
+    voiceBtn.classList.toggle('listening', val);
+    voiceBtn.setAttribute('aria-label', val ? 'Escuchando… (toca para parar)' : 'Activar reconocimiento de voz');
+    voiceBtn.title = val ? 'Escuchando…' : 'Activar voz';
+    if (val) {
+      showStatus('🎤 Escuchando…', true);
+    } else {
+      hideStatus();
+    }
+  }
+
+  function buildRecognition() {
+    const rec       = new SR();
+    rec.lang            = 'es-ES';
+    rec.continuous      = false;
+    rec.interimResults  = false;
+    rec.maxAlternatives = 5;
+
+    rec.onstart = () => setListening(true);
+    rec.onend   = () => setListening(false);
+    rec.onerror = (e) => {
+      setListening(false);
+      if (e.error === 'not-allowed') {
+        showStatus('⚠️ Permiso de micrófono denegado');
+      } else if (e.error !== 'aborted' && e.error !== 'no-speech') {
+        showStatus('⚠️ Error de reconocimiento');
+      }
+    };
+
+    rec.onresult = (e) => {
+      /* Try all alternatives until one parses */
+      const alternatives = Array.from(e.results[0]).map(alt => alt.transcript);
+      let parsed = null;
+      for (const transcript of alternatives) {
+        parsed = parseMultiplication(transcript);
+        if (parsed) break;
+      }
+
+      if (!parsed) {
+        speak('No entendí, intenta decir: siete por ocho');
+        showStatus('❓ No entendí — di por ejemplo "7 por 8"');
+        return;
+      }
+
+      const { a, b } = parsed;
+      const result   = a * b;
+      speak(`${a} por ${b} es igual a ${result}`);
+      showStatus(`${a} × ${b} = ${result}`);
+    };
+
+    return rec;
+  }
+
+  voiceBtn.addEventListener('click', () => {
+    if (isListening) {
+      recognition && recognition.stop();
+      return;
+    }
+    recognition = buildRecognition();
+    try {
+      recognition.start();
+    } catch (_) {
+      setListening(false);
+    }
+  });
+
+  voiceBtn.addEventListener('touchend', e => {
+    e.preventDefault();
+    voiceBtn.click();
+  }, { passive: false });
+}());
