@@ -359,3 +359,58 @@ footer strong { color: #aaa; }
 #tables-container::-webkit-scrollbar-thumb { background: #2a2a40; border-radius: 3px; }
 #tables-container::-webkit-scrollbar-thumb:hover { background: #3a3a60; }
 
+/* ============================================================
+   RESPONSIVE — TABLET  (≤ 900px)
+   ============================================================ */
+@media (max-width: 900px) {
+  #tables-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    min-width: unset;
+    overflow-x: unset;
+    padding: 10px 16px 40px;
+    gap: 10px;
+  }
+
+  .table-wrapper { width: 100%; }
+  table          { width: 100%; }
+}
+
+/* ============================================================
+   RESPONSIVE — MOBILE  (≤ 560px)
+   ============================================================ */
+@media (max-width: 560px) {
+  /* Splash */
+  .splash-icon  { font-size: 3.6rem; }
+  .splash-title { font-size: 2rem; }
+  .splash-sub   { font-size: 0.88rem; margin-bottom: 28px; }
+  #splash-btn   { padding: 12px 36px; font-size: 1rem; }
+
+  /* Header */
+  header { padding: 14px 14px 6px; }
+  .header-icon     { font-size: 1.5rem; }
+  .header-text h1  { font-size: 1.15rem; }
+  .header-text p   { display: none; }   /* hide subtitle on tiny screens */
+  #mute-btn        { padding: 7px 10px; font-size: 1rem; }
+
+  /* Legend */
+  .legend { gap: 8px; padding: 6px 12px 10px; }
+  .legend-item { font-size: 0.72rem; padding: 4px 10px; }
+
+  /* Tables grid: 2 columns */
+  #tables-container {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 8px 12px 40px;
+    gap: 8px;
+  }
+
+  .table-title { font-size: 0.85rem; padding: 6px 0; }
+
+  /* Bigger tap targets */
+  tr.mul-row td         { padding: 9px 6px; font-size: 0.82rem; }
+  tr.mul-row td:last-child { font-size: 0.95rem; padding-right: 8px; }
+
+  /* Footer */
+  footer { padding: 16px 16px 32px; font-size: 0.8rem; }
+}
+

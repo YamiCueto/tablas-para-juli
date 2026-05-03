@@ -217,7 +217,20 @@ function drawLines(matched) {
 
 // ── Event listeners ──────────────────────────────────────────────────────────
 document.querySelectorAll('tr.mul-row').forEach(tr => {
+  // Mouse (desktop)
   tr.addEventListener('mouseenter', () => onEnter(tr));
+
+  // Touch (mobile) — tap toggles: first tap highlights, second tap clears
+  tr.addEventListener('touchstart', e => {
+    e.preventDefault();           // prevent ghost click & scroll-triggered mouseenter
+    if (tr.classList.contains('is-source')) {
+      clearAll();
+      synth.cancel();
+      lastSpoken = null;
+    } else {
+      onEnter(tr);
+    }
+  }, { passive: false });
 });
 
 container.addEventListener('mouseleave', () => {
@@ -230,3 +243,8 @@ window.addEventListener('scroll', () => {
   const active = document.querySelector('tr.mul-row.is-source');
   if (active) onEnter(active);
 }, { passive: true });
+
+window.addEventListener('resize', () => {
+  const active = document.querySelector('tr.mul-row.is-source');
+  if (active) onEnter(active);
+});
